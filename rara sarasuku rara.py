@@ -157,3 +157,115 @@ plt.ylabel("Loss")
 plt.grid(True)
 plt.legend()
 plt.show()
+
+
+'''
+Sollunga Mamakutty
+Enna Intha Timela
+Call Pannirukinka
+LongDrive Polamaa
+
+Aama la
+Pona Wednesday Ponathu
+Intha Wednesday Vanthuruchu
+Aanaa Etho Oru Maasam
+Aana Maathiri Irukkulla
+
+Aanaa Pona Thadavaiye
+Pradeep Kitta Reason Solla
+Evlo Kastamaa Irunthuchu Theriyumaa
+
+Hey Pradeep
+Innaiku Un Call a Ennala
+Attend Panna Mudiyathu Da
+En Aththimbel Oorla Irunthu
+Familyoda Varraram
+Enka Appa Avanka Ellaraiyum Enkayaathu
+Velila Koottindu Poitu Vaa nu
+Sollinte Irukkaru Da
+
+Its Ok Baby..
+No Problem...Poittu Vaanka...
+
+Kaduppa Irukkuda Baby..
+Enakke Innaiku Oru Naal Than Leave
+Unna Paakkalam nu Irunthen
+Athulaium Avaru Vanthu Avankala
+Inka Kootindu Poitu Vaa
+Anka Kootindu Poitu vaa nu
+Paduthuraru Da
+
+Oru Naal Thaana Baby
+Palla Kadichitu Poitu Vaanka Paathukalam
+'''
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.decomposition import PCA
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score
+
+# 1. Load Data
+train = pd.read_csv('train.csv')
+test = pd.read_csv('test.csv')
+
+# 2. Separate features and target
+X = train.drop(columns=['target'])  # Replace 'target' with actual label column
+y = train['target']
+X_test_final = test.copy()
+
+# 3. Fill nulls
+imputer = SimpleImputer(strategy='mean')
+X_imputed = imputer.fit_transform(X)
+X_test_imputed = imputer.transform(X_test_final)
+
+# 4. Feature scaling
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X_imputed)
+X_test_scaled = scaler.transform(X_test_imputed)
+
+# 5. Feature selection (top k best features)
+selector = SelectKBest(score_func=f_classif, k=30)  # You can tune k
+X_selected = selector.fit_transform(X_scaled, y)
+X_test_selected = selector.transform(X_test_scaled)
+
+# 6. PCA for dimensionality reduction
+pca = PCA(n_components=20)  # You can tune this as well
+X_pca = pca.fit_transform(X_selected)
+X_test_pca = pca.transform(X_test_selected)
+
+# 7. Split training for validation
+X_train, X_val, y_train, y_val = train_test_split(X_pca, y, test_size=0.2, stratify=y, random_state=42)
+
+# 8. Define model and hyperparameter grid
+mlp = MLPClassifier(max_iter=1000, random_state=42)
+param_grid = {
+    'hidden_layer_sizes': [(100,), (100, 50), (128, 64)],
+    'activation': ['relu', 'tanh'],
+    'alpha': [0.0001, 0.001, 0.01],
+    'learning_rate': ['constant', 'adaptive'],
+    'solver': ['adam']
+}
+
+# 9. GridSearchCV for best model
+grid = GridSearchCV(mlp, param_grid, cv=5, scoring='accuracy', verbose=2, n_jobs=-1)
+grid.fit(X_train, y_train)
+
+# 10. Evaluate on validation
+y_pred = grid.predict(X_val)
+print("Best Parameters:", grid.best_params_)
+print("Validation Accuracy:", accuracy_score(y_val, y_pred))
+
+# 11. Refit on full data for submission
+grid.best_estimator_.fit(X_pca, y)
+
+# 12. Predict on test
+y_test_pred = grid.predict(X_test_pca)
+
+# 13. Save submission
+submission = pd.DataFrame({'id': test['id'], 'target': y_test_pred})
+submission.to_csv('submission.csv', index=False)
