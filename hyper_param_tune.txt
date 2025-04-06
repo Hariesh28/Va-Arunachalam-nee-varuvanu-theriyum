@@ -130,6 +130,9 @@ params = {
     'learning_rate': ['constant', 'adaptive']
 }
 
+
+model = grid_search.best_estimator_
+
 grid = GridSearchCV(MLPClassifier(max_iter=1000), params, cv=5)
 grid.fit(X_train, y_train)
 print("Best Parameters:", grid.best_params_)
