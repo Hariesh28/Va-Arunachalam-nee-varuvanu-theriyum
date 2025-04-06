@@ -1,0 +1,135 @@
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import GridSearchCV
+
+params = {
+    'criterion': ['gini', 'entropy'],
+    'max_depth': [5, 10, 20, None],
+    'min_samples_split': [2, 5, 10]
+}
+
+grid = GridSearchCV(DecisionTreeClassifier(), params, cv=5)
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
+
+
+from sklearn.ensemble import RandomForestClassifier
+
+params = {
+    'n_estimators': [100, 200],
+    'max_depth': [10, 20, None],
+    'max_features': ['sqrt', 'log2'],
+    'min_samples_split': [2, 5]
+}
+
+grid = GridSearchCV(RandomForestClassifier(), params, cv=5)
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
+
+
+from sklearn.naive_bayes import GaussianNB
+
+params = {
+    'var_smoothing': [1e-9, 1e-8, 1e-7]
+}
+
+grid = GridSearchCV(GaussianNB(), params, cv=5)
+grid.fit(X_train.toarray(), y_train)  # Convert to dense if using sparse
+print("Best Parameters:", grid.best_params_)
+
+
+from sklearn.linear_model import Ridge
+
+params = {
+    'alpha': [0.01, 0.1, 1, 10]
+}
+
+grid = GridSearchCV(Ridge(), params, cv=5)
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
+
+
+from sklearn.cluster import KMeans
+
+params = {
+    'n_clusters': [2, 3, 4, 5],
+    'init': ['k-means++', 'random'],
+    'n_init': [10, 20]
+}
+
+grid = GridSearchCV(KMeans(), params, cv=5)
+grid.fit(X_train)
+print("Best Parameters:", grid.best_params_)
+
+
+from sklearn.mixture import GaussianMixture
+
+params = {
+    'n_components': [2, 3, 4],
+    'covariance_type': ['full', 'tied', 'diag', 'spherical']
+}
+
+best_score = -1
+best_model = None
+for cov in params['covariance_type']:
+    for comp in params['n_components']:
+        gmm = GaussianMixture(n_components=comp, covariance_type=cov)
+        gmm.fit(X_train)
+        score = gmm.bic(X_train)
+        if score < best_score or best_model is None:
+            best_score = score
+            best_model = gmm
+
+print("Best GMM:", best_model)
+
+
+from sklearn.svm import SVC
+
+params = {
+    'C': [0.1, 1, 10],
+    'kernel': ['linear', 'rbf'],
+    'gamma': ['scale', 'auto']
+}
+
+grid = GridSearchCV(SVC(), params, cv=5)
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
+
+from sklearn.svm import SVR
+
+params = {
+    'kernel': ['rbf', 'linear'],
+    'C': [0.1, 1, 10],
+    'epsilon': [0.01, 0.1, 1],
+    'gamma': ['scale', 'auto']
+}
+
+grid = GridSearchCV(SVR(), params, cv=5)
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
+
+ from sklearn.linear_model import Perceptron
+
+params = {
+    'penalty': ['l2', 'l1', 'elasticnet'],
+    'alpha': [0.0001, 0.001, 0.01],
+    'max_iter': [1000, 2000]
+}
+
+grid = GridSearchCV(Perceptron(), params, cv=5)
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
+
+
+from sklearn.neural_network import MLPClassifier
+
+params = {
+    'hidden_layer_sizes': [(100,), (64, 64), (128, 64)],
+    'activation': ['relu', 'tanh'],
+    'solver': ['adam', 'sgd'],
+    'alpha': [0.0001, 0.001],
+    'learning_rate': ['constant', 'adaptive']
+}
+
+grid = GridSearchCV(MLPClassifier(max_iter=1000), params, cv=5)
+grid.fit(X_train, y_train)
+print("Best Parameters:", grid.best_params_)
